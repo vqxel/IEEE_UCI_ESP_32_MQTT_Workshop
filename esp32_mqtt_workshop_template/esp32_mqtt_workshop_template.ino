@@ -6,8 +6,8 @@
 #define PHOTOTRANSISTOR 2
 
 // Wi-Fi & MQTT configurations
-const char* ssid = "Rezq24";
-const char* password = "nathanmyson";
+const char* ssid = "hotspot name";
+const char* password = "hotspot password";
 const char* mqtt_server = "test.mosquitto.org";
 
 const char* leader_esp_id = "YOUR_NAME-esp-32";  // ID of the ESP32 who's phototransistor you want to control this ESP32's LED
@@ -104,5 +104,5 @@ void loop() {
   //          - msg is the data to send
   //          - 1 is the length of the array, in this case message is 1 byte long
   bool reading = phototransistorReadBooleanState();
-  
+
 }

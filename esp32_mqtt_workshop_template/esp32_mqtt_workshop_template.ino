@@ -3,7 +3,7 @@
 
 // Pin definitions
 #define LED 1
-#define PHOTOTRANSISTOR 2
+#define BUTTON 0
 
 // Wi-Fi & MQTT configurations
 const char* ssid = "hotspot name";
@@ -18,8 +18,12 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 byte msg[1] = { 0 };
 
-// Phototransistor variables
-const int phototransistorThreshold = 50;
+
+// Button variables
+const int debounceThreshold = 50;  // milliseconds to wait for a stable change
+bool lastButtonState;               // last raw reading
+unsigned long lastDebounceTime = 0;   // last time the raw reading changed
+bool debouncedState;                // debounced (stable) state
 
 // Function to connect to Wi-Fi
 void setup_wifi() {
@@ -73,14 +77,9 @@ void reconnect() {
   }
 }
 
-// Read the phototransistor state.
-bool phototransistorReadBooleanState() {
-  return analogRead(PHOTOTRANSISTOR) <= phototransistorThreshold;
-}
-
 void setup() {
   pinMode(LED, OUTPUT);
-  pinMode(PHOTOTRANSISTOR, INPUT);
+  pinMode(BUTTON, INPUT);
 
   Serial.begin(115200);
 
@@ -97,12 +96,12 @@ void loop() {
   client.loop();
 
   // TODO: Read sensor and update (publish) to MQTT broker
-  //        - phototransistorReadBooleanState() returns whether the phototransistor is covered
-  //        - msg is the byte array of data to send, change the value of its first index depending on whether the phototransistor is covered
+  //        - digitalRead(BUTTON) returns the buttons state
+  //        - msg is the byte array of data to send, change the value of its first index depending on the buttons state
+  //          - debounce the button to reduce spam! (more advanced, not strictly necessary)
   //        - use client.publish(this_esp_id, msg, 1); to send the message
   //          - this_esp_id is the topic to publish to
   //          - msg is the data to send
   //          - 1 is the length of the array, in this case message is 1 byte long
-  bool reading = phototransistorReadBooleanState();
-
+  bool reading = digitalRead(BUTTON);
 }

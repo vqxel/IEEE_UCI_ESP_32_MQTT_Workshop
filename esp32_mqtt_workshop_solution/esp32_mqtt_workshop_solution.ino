@@ -3,7 +3,7 @@
 
 // Pin definitions
 #define LED 1
-#define PHOTOTRANSISTOR 2
+#define BUTTON 0
 
 // Wi-Fi & MQTT configurations
 const char* ssid = "hotspot name";
@@ -18,8 +18,8 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 byte msg[1] = { 0 };
 
-// Phototransistor variables
-const int phototransistorThreshold = 50;
+
+// Button variables
 const int debounceThreshold = 50;  // milliseconds to wait for a stable change
 bool lastButtonState;               // last raw reading
 unsigned long lastDebounceTime = 0;   // last time the raw reading changed
@@ -49,11 +49,11 @@ void setup_wifi() {
 
 // MQTT callback function
 void callback(char* topic, byte* payload, unsigned int length) {
-  // Turn LED on if payload is non-zero, else turn it off.
+  // Turn LED off if payload is non-zero, else turn it on.
   if (payload[0]) {
-    digitalWrite(LED, HIGH);
-  } else {
     digitalWrite(LED, LOW);
+  } else {
+    digitalWrite(LED, HIGH);
   }
 }
 
@@ -75,14 +75,9 @@ void reconnect() {
   }
 }
 
-// Read the phototransistor state.
-bool photoresistorReadBooleanState() {
-  return analogRead(PHOTOTRANSISTOR) <= phototransistorThreshold;
-}
-
 void setup() {
   pinMode(LED, OUTPUT);
-  pinMode(PHOTOTRANSISTOR, INPUT);
+  pinMode(BUTTON, INPUT);
 
   Serial.begin(115200);
 
@@ -92,7 +87,7 @@ void setup() {
   client.setCallback(callback);
 
   // Initialize debounce state variables with the current reading.
-  lastButtonState = photoresistorReadBooleanState();
+  lastButtonState = digitalRead(BUTTON);
   debouncedState = lastButtonState;
   lastDebounceTime = millis();
 }
@@ -104,7 +99,7 @@ void loop() {
   client.loop();
 
   // Read the current raw sensor value.
-  bool reading = photoresistorReadBooleanState();
+  bool reading = digitalRead(BUTTON);
   unsigned long now = millis();
 
   // Check if the raw reading has changed.
@@ -121,10 +116,10 @@ void loop() {
       // Publish the MQTT message when the debounced state changes.
       if (debouncedState) {
         msg[0] = 1;
-        Serial.println("ON");
+        Serial.println("OFF");
       } else {
         msg[0] = 0;
-        Serial.println("OFF");
+        Serial.println("ON");
       }
       client.publish(this_esp_id, msg, 1);
     }
